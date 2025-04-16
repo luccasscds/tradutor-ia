@@ -3,6 +3,7 @@ import { Container, Navbar, Button, Form, Spinner, Alert, Modal, ListGroup, Imag
 import './App.css'
 import { IAController } from './controllers/IA.controller';
 import * as appPackage from '../package.json';
+import { languages } from './utils/languages';
 
 function App() {
   const [inputText, setInputText] = useState('');
@@ -10,8 +11,16 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [showSettings, setShowSettings] = useState(false);
-  const [selectedLanguage, setSelectedLanguage] = useState('en');
-  const [darkMode, setDarkMode] = useState(true); // Default to dark mode
+  const [selectedLanguages, setSelectedLanguages] = useState(['en', 'es']);
+  const [darkMode, setDarkMode] = useState(true);
+
+  // Custom styles based on theme
+  const themeStyles = {
+    mainBackground: darkMode ? 'bg-dark' : 'bg-light',
+    cardBackground: darkMode ? 'bg-dark text-white' : 'bg-white',
+    textColor: darkMode ? 'text-light' : 'text-dark',
+    borderColor: darkMode ? 'border-secondary' : 'border-light',
+  };
 
   useEffect(() => {
     const titleElement = document.querySelector('head > title');
@@ -26,30 +35,52 @@ function App() {
     };
   }, [darkMode]);
 
-  const languages = [
-    { code: 'en', name: 'Inglês', flag: '🇬🇧' },
-    { code: 'es', name: 'Espanhol', flag: '🇪🇸' },
-    { code: 'fr', name: 'Francês', flag: '🇫🇷' },
-    { code: 'de', name: 'Alemão', flag: '🇩🇪' },
-    { code: 'it', name: 'Italiano', flag: '🇮🇹' },
-    { code: 'ja', name: 'Japonês', flag: '🇯🇵' }
-  ];
-
-  async function simulateTranslation() {
-    try {
-      if (!inputText.trim()) {
-        setError('Por favor, digite algum texto para traduzir.');
-        return;
+  // Função para alternar um idioma na seleção
+  function toggleLanguageSelection(code: string) {
+    setSelectedLanguages(prev => {
+      if (prev.includes(code)) {
+        // Se já estiver selecionado e não for o último, remova-o
+        return prev.length > 1 ? prev.filter(lang => lang !== code) : prev;
+      } else {
+        // Se não estiver selecionado, adicione-o
+        return [...prev, code];
       }
+    });
+  };
+
+  // Função para obter os idiomas selecionados como texto
+  function getSelectedLanguagesText() {
+    if (selectedLanguages.length === 1) {
+      const lang = languages.find(l => l.code === selectedLanguages[0]);
+      return lang?.name || '';
+    } else {
+      return `${selectedLanguages.length} idiomas selecionados`;
+    }
+  };
   
+  async function executeTranslation() {
+    try {
+      if (!inputText.trim()) throw 'Por favor, digite algum texto para traduzir.';
+      
       setIsLoading(true);
       setError('');
+      
+      // Obter os nomes dos idiomas selecionados
+      const targetLanguages = selectedLanguages.map(code => {
+        const lang = languages.find(l => l.code === code);
+        return lang?.name || '';
+      }).join(', ');
   
       const rersponse = await IAController.generateContent({
         contents: `
           Você é um assistente de IA que ajuda a traduzir textos.
-          Traduza o seguinte texto para ${selectedLanguageObj?.name || languages[0].name}.
-          Não adicione nada além do texto traduzido.
+          Traduza o seguinte texto para ${targetLanguages}.
+          Retorne somente o texto traduzido, sem explicações ou formatações adicionais.
+          Retorne da seguinte forma:
+          
+          * [idioma selecionado em português] 
+          [Texto traduzido]
+          
           
           """
           ${inputText}
@@ -57,27 +88,14 @@ function App() {
         `,
       });
   
-      if (rersponse) {
-        setTranslatedText(rersponse);
-      } else {
-        setError('Erro ao traduzir o texto. Tente novamente.');
-      }
+      if (!rersponse) throw 'Resposta vazia.';
+      setTranslatedText(rersponse);
     } catch (error) {
-      console.error('Error during translation:', error);
+      setError(error as string);
     } finally {
       setIsLoading(false);
     }
   };
-
-  // Custom styles based on theme
-  const themeStyles = {
-    mainBackground: darkMode ? 'bg-dark' : 'bg-light',
-    cardBackground: darkMode ? 'bg-dark text-white' : 'bg-white',
-    textColor: darkMode ? 'text-light' : 'text-dark',
-    borderColor: darkMode ? 'border-secondary' : 'border-light',
-  };
-
-  const selectedLanguageObj = languages.find(l => l.code === selectedLanguage);
 
   return (
     <Container className={`py-4 ${themeStyles.mainBackground}`} style={{ maxWidth: '550px' }}>
@@ -85,11 +103,19 @@ function App() {
         {/* Navbar with settings and theme toggle buttons */}
         <Navbar bg={"primary"} variant="dark" className="rounded-top p-2">
           <Container>
-            <Navbar.Brand className="fw-bold">{appPackage.name}</Navbar.Brand>
+            <Navbar.Brand className="fw-bold">
+              <Image
+                src="./assets/logo.png"
+                alt="ícone do aplicativo"
+                width={30}
+                height={30}
+                className="me-2"
+              />
+              {appPackage.name}
+            </Navbar.Brand>
             <div className="d-flex gap-2">
               {/* Theme toggle button */}
               <Button 
-                variant={"light"} 
                 size="sm" 
                 onClick={() => setDarkMode(!darkMode)}
                 title={darkMode ? "Mudar para tema claro" : "Mudar para tema escuro"}
@@ -113,14 +139,13 @@ function App() {
 
               {/* Settings button */}
               <Button 
-                variant="light" 
                 size="sm" 
                 onClick={() => setShowSettings(true)}
-                title="Configurações"
+                title="Configurações de idiomas"
               >
                 <Image 
-                  src="./assets/config.svg"
-                  alt="Configurações"
+                  src="./assets/tradutor.svg"
+                  alt="ícone de configurações de idiomas"
                   width={24}
                   height={24}
                 />
@@ -131,7 +156,7 @@ function App() {
         
         <div className="p-4" style={{ minHeight: '520px' }}>
           <div className={`text-center ${darkMode ? 'text-light' : 'text-muted'} mb-3 small`}>
-            Traduzindo de Português para {selectedLanguageObj?.name}
+            Traduzindo de Português para {getSelectedLanguagesText()}
           </div>
           
           <Form.Group className="mb-3">
@@ -145,13 +170,13 @@ function App() {
             />
           </Form.Group>
 
-          {error && <Alert variant="danger" className="py-2 text-center">{error}</Alert>}
+          {error && <Alert variant="danger" dismissible >Error: {error}</Alert>}
 
           <div className="d-grid gap-2 my-3">
             <Button 
               variant={"primary"} 
-              onClick={simulateTranslation}
-              disabled={isLoading}
+              onClick={executeTranslation}
+              disabled={isLoading || !inputText.trim()}
             >
               {isLoading ? (
                 <>
@@ -173,7 +198,7 @@ function App() {
             <Form.Label className={`fw-medium ${themeStyles.textColor}`}>Tradução:</Form.Label>
             <Form.Control
               as="textarea"
-              rows={4}
+              rows={6}
               value={translatedText}
               readOnly
             />
@@ -184,33 +209,30 @@ function App() {
       {/* Settings Modal */}
       <Modal show={showSettings} onHide={() => setShowSettings(false)} className={darkMode ? 'dark-modal' : ''}>
         <Modal.Header className={darkMode ? 'bg-dark text-white' : ''}>
-          <Modal.Title>Selecione o idioma</Modal.Title>
+          <Modal.Title>Selecione os idiomas de tradução</Modal.Title>
         </Modal.Header>
         <Modal.Body className={darkMode ? 'bg-dark' : ''}>
           <ListGroup variant={darkMode ? "dark" : ""}>
             {languages.map((lang) => (
               <ListGroup.Item 
                 key={lang.code}
-                active={selectedLanguage === lang.code}
                 action
-                onClick={() => {
-                  setSelectedLanguage(lang.code);
-                  setShowSettings(false);
-                }}
-                // @ts-ignore
-                className={`d-flex align-items-center ${darkMode && !selectedLanguage === lang.code ? 'bg-dark text-white border-secondary' : ''}`}
+                className={`d-flex align-items-center ${darkMode ? 'bg-dark text-white border-secondary' : ''}`}
+                onClick={() => toggleLanguageSelection(lang.code)}
               >
-                <span className="me-3 fs-4">{lang.flag}</span>
-                <span>{lang.name}</span>
-                {selectedLanguage === lang.code && (
-                  <Image
-                    src="./assets/check.svg"
-                    alt="ícone de verificação"
-                    width={24}
-                    height={24}
-                    className="ms-auto"
-                  />
-                )}
+                <Form.Check 
+                  type="checkbox"
+                  id={`checkbox-${lang.code}`}
+                  checked={selectedLanguages.includes(lang.code)}
+                  readOnly
+                  label={
+                    <div className="d-flex align-items-center gap-2">
+                      <span>{lang.flag}</span>
+                      <span>{lang.name}</span>
+                    </div>
+                  }
+                  className="w-100"
+                />
               </ListGroup.Item>
             ))}
           </ListGroup>
