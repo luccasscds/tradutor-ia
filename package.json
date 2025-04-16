@@ -4,11 +4,16 @@
   "version": "0.0.1",
   "type": "module",
   "description": "É uma aplicação web que utiliza inteligência artificial para traduzir textos de Português para diversos idiomas.",
+  "author": {
+    "name": "Lucas Silva",
+    "url": "https://github.com/luccasscds"
+  },
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && npm run format_file",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "format_file": "tsc && sed -i 's/\"\\//\".\\//g' dist/index.html"
   },
   "dependencies": {
     "@google/genai": "^0.8.0",

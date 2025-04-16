@@ -96,14 +96,14 @@ function App() {
               >
                 {darkMode ? (
                   <Image
-                    src="/assets/sol.svg"
+                    src="./assets/sol.svg"
                     alt="ícone do sol"
                     width={24}
                     height={24}
                   />
                 ) : (
                   <Image
-                    src="/assets/lua.svg"
+                    src="./assets/lua.svg"
                     alt="ícone da lua"
                     width={24}
                     height={24}
@@ -119,7 +119,7 @@ function App() {
                 title="Configurações"
               >
                 <Image 
-                  src="/assets/config.svg"
+                  src="./assets/config.svg"
                   alt="Configurações"
                   width={24}
                   height={24}
@@ -204,7 +204,7 @@ function App() {
                 <span>{lang.name}</span>
                 {selectedLanguage === lang.code && (
                   <Image
-                    src="/assets/check.svg"
+                    src="./assets/check.svg"
                     alt="ícone de verificação"
                     width={24}
                     height={24}
