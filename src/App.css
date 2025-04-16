@@ -1,0 +1,16 @@
+body {
+    transition: background-color 0.3s ease;
+}
+.dark-modal .modal-content {
+    background-color: #212529;
+    color: white;
+}
+.dark-modal .close {
+    color: white;
+}
+.dark-modal .modal-header {
+    border-bottom-color: #495057;
+}
+.dark-modal .modal-footer {
+    border-top-color: #495057;
+}
