@@ -1,7 +1,7 @@
 {
   "name": "Tradutor IA",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
   "type": "module",
   "description": "É uma aplicação web que utiliza inteligência artificial para traduzir textos de Português para diversos idiomas.",
   "scripts": {
