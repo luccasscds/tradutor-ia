@@ -4,6 +4,7 @@ import './App.css'
 import { IAController } from './controllers/IA.controller';
 import * as appPackage from '../package.json';
 import { languages } from './utils/languages';
+import { speechRecognition } from './controllers/speechRecognition.controller';
 
 function App() {
   const [inputText, setInputText] = useState('');
@@ -13,6 +14,8 @@ function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [selectedLanguages, setSelectedLanguages] = useState(['en', 'es']);
   const [darkMode, setDarkMode] = useState(true);
+  const [voiceRecognition, setVoiceRecognition] = useState(null as { start: () => void, stop: () => void, lang: string, addEventListener: any } | null);
+  const [startMic, setStartMic] = useState(true);
 
   // Custom styles based on theme
   const themeStyles = {
@@ -23,16 +26,26 @@ function App() {
   };
 
   useEffect(() => {
-    const titleElement = document.querySelector('head > title');
-    if (titleElement) {
-      // @ts-ignore
-      titleElement.innerText = appPackage.name;
-    };
-
-    document.body.classList.toggle('bg-dark', darkMode);
-    return () => {
-      document.body.classList.remove('bg-dark');
-    };
+    try {
+      const titleElement = document.querySelector('head > title');
+      if (titleElement) {
+        // @ts-ignore
+        titleElement.innerText = appPackage.name;
+      };
+  
+      const newSpeehtRecognition = speechRecognition((res) => {
+        const result = res.results[0][0].transcript;
+        setInputText(result);
+      });
+      setVoiceRecognition(newSpeehtRecognition);
+  
+      document.body.classList.toggle('bg-dark', darkMode);
+      return () => {
+        document.body.classList.remove('bg-dark');
+      };
+    } catch (error) {
+      setError(error as string);
+    }
   }, [darkMode]);
 
   // Função para alternar um idioma na seleção
@@ -172,9 +185,10 @@ function App() {
 
           {error && <Alert variant="danger" dismissible >Error: {error}</Alert>}
 
-          <div className="d-grid gap-2 my-3">
+          <div className="d-flex gap-2 my-3 justify-content-center">
             <Button 
-              variant={"primary"} 
+              variant={"primary"}
+              className='flex-grow-1'
               onClick={executeTranslation}
               disabled={isLoading || !inputText.trim()}
             >
@@ -191,6 +205,33 @@ function App() {
                   <span>Traduzindo...</span>
                 </>
               ) : 'Traduzir'}
+            </Button>
+            <Button
+              variant="primary"
+              disabled={!voiceRecognition}
+              onMouseDown={() => {
+                setStartMic(false);
+                voiceRecognition?.start();
+              }}
+              onMouseUp={async () => {
+                setStartMic(true);
+                voiceRecognition?.stop();
+              }}
+            >
+              {startMic ? (
+                <Image
+                src="./assets/mic.svg"
+                alt="ícone do microfone"
+                width={24}
+                height={24}
+              />)
+                : (
+                <Image
+                src="./assets/mic-off.svg"
+                alt="ícone do microfone"
+                width={24}
+                height={24}
+              />)}
             </Button>
           </div>
 
