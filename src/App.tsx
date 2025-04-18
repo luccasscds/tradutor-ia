@@ -268,7 +268,12 @@ function App() {
                   readOnly
                   label={
                     <div className="d-flex align-items-center gap-2">
-                      <span>{lang.flag}</span>
+                      <Image
+                        src={`./assets/${lang.flag}.svg`}
+                        alt={`ícone da bandeira ${lang.name}`}
+                        width={24}
+                        height={24}
+                      />
                       <span>{lang.name}</span>
                     </div>
                   }
